@@ -3,58 +3,138 @@ import './App.css';
 import TaskForm from './component/TaskForm';
 import Control from './component/Control';
 import TaskList from './component/TaskList';
+// import { data } from 'jquery';
 
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
             tasks : [], // id : unique, name, status
-            isDisplayForm : false 
+            isDisplayForm : false,
+            taskEdit : null,
+            filter : {
+                name : '',
+                status : -1
+            },
+            keyword : '',
+            sort :  {
+                by : 'name',
+                value : 1
+            }
         }
     }
 
     componentWillMount() {
-        if (localStorage && localStorage.getItem('task')){ 
-            let tasks = JSON.parse( localStorage.getItem('task'));
+        if (localStorage && localStorage.getItem('tasks')){ 
+            let tasks = JSON.parse( localStorage.getItem('tasks'));
             this.setState({
                 tasks : tasks
             })
         }
     }
 
-    _handleGenerateData = () => {
-        let tasks = [
-            {
-                id : this.genetateID(),
-                name : 'Lutfhi',
-                status : true
-            },
-            {
-                id : this.genetateID(),
-                name : 'Reynaldy',
-                status : false
-            },
-            {
-                id : this.genetateID(),
-                name : 'Tambora',
-                status : true
-            }
-        ];
-        this.setState({
-            tasks : tasks
-        });
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-    }
-
-    _handleToggleForm = () => {
-        this.setState({
-            isDisplayForm : true
-        });
+    _handleToggleForm = () => { //tambah pekerjaan
+        if (this.state.isDisplayForm && this.state.taskEdit !== null) {
+            this.setState({
+                // isDisplayForm : true,
+                taskEdit : null
+            });
+        } else {
+            this.setState({
+                isDisplayForm : true,
+                taskEdit : null
+            });
+        }
     }
     
     _handleCloseForm = () => {
         this.setState({
             isDisplayForm : false
+        });
+    }
+
+    _handleShowForm = () => {
+        this.setState({
+            isDisplayForm : true
+        });
+    }
+
+    _handleSubmit = (data) => {
+        let { tasks } = this.state; // task = this.state.tasks
+        if (data.id === '') {
+            data.id = this.genetateID(); // task
+            tasks.push(data);
+        } else {
+            // Edit
+            let index = this._handleFindIndex(data.id);
+            tasks[index] = data;
+        }
+        this.setState ({
+            tasks : tasks,
+            taskEdit : null
+        });
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    _handleUpdateStatus = (id) => {
+        let { tasks } = this.state;
+        // console.log(id);
+        let index = this._handleFindIndex(id);
+        if(index !== -1) {
+            tasks[index].status = !tasks[index].status;
+            this.setState({
+                tasks : tasks
+            }) 
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+    }
+
+    _handleDelete = (id) => {
+        let { tasks } = this.state;
+        let index = this._handleFindIndex(id);
+        if(index !== -1) {
+            tasks.splice(index, 1)
+            this.setState({
+                tasks : tasks
+            }) 
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+    }
+
+    _handleEdit = (id) => {
+        let { tasks } = this.state;
+        let index = this._handleFindIndex(id);
+        let taskEdit = tasks[index];
+        this.setState({
+            taskEdit : taskEdit
+        });
+        this._handleShowForm();
+    }
+
+    _handleFindIndex = (id) => {
+        let { tasks } = this.state;
+        let result = -1;
+        tasks.forEach((task, index) => {
+            if(task.id === id) {
+                result =  index;
+            }
+        });
+        return result;
+    }
+
+    _handleFilter = (filterName, filterStatus) => {
+        filterStatus = parseInt(filterStatus, 10);
+        this.setState({
+            filter : {
+                name : filterName.toLowerCase(),
+                status : filterStatus
+            }
+        });
+    }
+
+    _handleSearch = (keyword) => {
+        this.setState({
+            keyword : keyword
         });
     }
 
@@ -68,9 +148,34 @@ class App extends Component {
 
     render () {
 
-        let { tasks, isDisplayForm } = this.state; // let tasks = this.state.tasks
-        let elmTaskForm = isDisplayForm ? <TaskForm _handleCloseForm={this._handleCloseForm} /> : '';
+        let { tasks, isDisplayForm, taskEdit, filter, keyword } = this.state;
+        if (filter) {
+            if(filter.name) {
+                tasks = tasks.filter((task) => {
+                    return task.name.toLowerCase().indexOf(filter.name) !== -1;
+                });
+            }
+            tasks = tasks.filter((task) => {
+                if(filter.status === -1) {
+                    return task;
+                } else {
+                    return task.status === (filter.status === 1 ? true : false);
+                }
+            })
+        }
 
+        if(keyword) {
+            tasks = tasks.filter((task) => {
+                return task.name.toLowerCase().indexOf(keyword) !== -1;
+            });
+        }
+
+        let elmTaskForm = isDisplayForm 
+            ? <TaskForm 
+                onSubmit={this._handleSubmit} 
+                _handleCloseForm={this._handleCloseForm} 
+                task={taskEdit}
+                /> : '';
 
         return (
             <div className="container">
@@ -92,12 +197,18 @@ class App extends Component {
                         >
                             <span className="fa fa-plus mr-5"></span>Tambah Pekerjaan
                         </button>
-                        <button type="button" className="btn btn-danger ml-5" onClick={this._handleGenerateData}>
-                        Generate Data
-                        </button>
                         
-                        <Control />
-                        <TaskList tasks = { tasks } />
+                        <Control 
+                            _handleSearch = {this._handleSearch}
+                        />
+
+                        <TaskList 
+                            tasks = { tasks } 
+                            _handleUpdateStatus={this._handleUpdateStatus} 
+                            _handleDelete={this._handleDelete}
+                            _handleEdit={this._handleEdit}
+                            _handleFilter={this._handleFilter}
+                        />
                     
                     </div>
                 </div>

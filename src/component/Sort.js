@@ -11,6 +11,7 @@ class Sort extends Component {
                         id="dropdownMenu1"
                         data-toggle="dropdown"
                         aria-haspopup="true"
+                        aria-expanded="true"
                     > Sortir
                         <span className="fa fa-caret-square-o-down ml-5"></span>
                     </button>

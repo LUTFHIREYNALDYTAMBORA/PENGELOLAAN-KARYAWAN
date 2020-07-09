@@ -6,8 +6,35 @@ class TaskForm extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            id : '',
             name : '',
-            status : false
+            status : 0
+        }
+    }
+
+    componentWillMount() {
+        if (this.props.task) {
+            this.setState({
+                id : this.props.task.id,
+                name : this.props.task.name,
+                status : this.props.task.status
+            })
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps && nextProps.task) {
+            this.setState({
+                id : nextProps.task.id,
+                name : nextProps.task.name,
+                status : nextProps.task.status
+            })
+        } else if (!nextProps.task) {
+            this.setState({
+                id : '',
+                name : '',
+                status : 0
+            })
         }
     }
 
@@ -19,14 +46,27 @@ class TaskForm extends Component {
         let target = e.target;
         let name = target.name;
         let value = target.value;
+        if (name === 'status') {
+            value = target.value === 'true' ? true : false;
+        }
         this.setState ({
             [name] : value
         });
     }
 
     _handleSubmit = (e) => {
-        e.preventDefault();
-        console.log(this.state);
+        e.preventDefault(e);
+        this.props.onSubmit(this.state);
+        this._handleReset();
+        // console.log(this.state);
+    }
+
+    _handleReset = () => {
+        // console.log('ini reset');
+        this.setState({
+            name : '',
+            status : 0
+        })
         
     }
 
@@ -64,14 +104,24 @@ class TaskForm extends Component {
                                         value={this.state.status}
                                         onChange={this._handleChange}
                                     >
+                                        <option value={0}>--Pilih Status--</option>
                                         <option value={true}>Aktif</option>
                                         <option value={false}>Tidak Aktif</option>
                                     </select><br/><br/>
                                     <div className="text-right">
-                                        <button type="button" className="btn btn-warning" style={{marginLeft:'138px'}}>
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-warning" 
+                                            style={{marginLeft:'138px'}}
+                                            onClick={this._handleSubmit}
+                                        >
                                             <span className="fa fa-plus mr-3"></span>Simpan
                                         </button> &nbsp;
-                                        <button type="button" className="btn btn-danger">
+                                        <button 
+                                            type="button" 
+                                            className="btn btn-danger"
+                                            onClick={this._handleReset}
+                                        >
                                             <span className="fa fa-close mr-3"></span>Batal
                                         </button>
                                     </div>  

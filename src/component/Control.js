@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Search from './Search';
-import Sort from '../Sort';
+import Sort from './Sort';
 // import TaskList from './TaskList';
 
 class Control extends Component {
@@ -9,7 +9,9 @@ class Control extends Component {
             
                 <div>        
                 {/* Search & Sort */}
-                <Search /> <br/>
+                <Search 
+                    _handleSearch={this.props._handleSearch} 
+                /> <br/>
                 
                 <Sort /><br/><br/>
                         
